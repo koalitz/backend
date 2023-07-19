@@ -1,0 +1,5 @@
+# project directory
+.idea
+
+# configs of the server
+.env
