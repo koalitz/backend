@@ -3,7 +3,6 @@ package controller
 import (
 	"context"
 	"github.com/gin-gonic/gin"
-	"github.com/koalitz/backend/internal/controller/dao"
 	"github.com/koalitz/backend/internal/controller/dto"
 	"github.com/koalitz/backend/pkg/middleware/errs"
 	"net/http"
@@ -34,7 +33,11 @@ func (h *Handler) signInByEmail(c *gin.Context, auth dto.EmailWithCode) error {
 	customer, err := h.auth.AuthUserByEmail(auth.Email)
 
 	if err != nil {
-		return err
+		customer, err = h.auth.CreateUserByEmail(auth)
+
+		if err != nil {
+			return err
+		}
 	}
 
 	err = h.sess.SetNewCookie(customer.ID, c)
@@ -42,7 +45,7 @@ func (h *Handler) signInByEmail(c *gin.Context, auth dto.EmailWithCode) error {
 		return err
 	}
 
-	c.JSON(http.StatusOK, dao.TransformToMe(customer))
+	c.JSON(http.StatusOK, customer)
 	return nil
 }
 
