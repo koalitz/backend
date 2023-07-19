@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"entgo.io/ent/dialect/sql"
+	"entgo.io/ent/dialect/sql/sqlgraph"
 	"github.com/koalitz/backend/ent/predicate"
 )
 
@@ -349,16 +350,6 @@ func FirstNameHasSuffix(v string) predicate.User {
 	return predicate.User(sql.FieldHasSuffix(FieldFirstName, v))
 }
 
-// FirstNameIsNil applies the IsNil predicate on the "first_name" field.
-func FirstNameIsNil() predicate.User {
-	return predicate.User(sql.FieldIsNull(FieldFirstName))
-}
-
-// FirstNameNotNil applies the NotNil predicate on the "first_name" field.
-func FirstNameNotNil() predicate.User {
-	return predicate.User(sql.FieldNotNull(FieldFirstName))
-}
-
 // FirstNameEqualFold applies the EqualFold predicate on the "first_name" field.
 func FirstNameEqualFold(v string) predicate.User {
 	return predicate.User(sql.FieldEqualFold(FieldFirstName, v))
@@ -424,16 +415,6 @@ func LastNameHasSuffix(v string) predicate.User {
 	return predicate.User(sql.FieldHasSuffix(FieldLastName, v))
 }
 
-// LastNameIsNil applies the IsNil predicate on the "last_name" field.
-func LastNameIsNil() predicate.User {
-	return predicate.User(sql.FieldIsNull(FieldLastName))
-}
-
-// LastNameNotNil applies the NotNil predicate on the "last_name" field.
-func LastNameNotNil() predicate.User {
-	return predicate.User(sql.FieldNotNull(FieldLastName))
-}
-
 // LastNameEqualFold applies the EqualFold predicate on the "last_name" field.
 func LastNameEqualFold(v string) predicate.User {
 	return predicate.User(sql.FieldEqualFold(FieldLastName, v))
@@ -452,6 +433,33 @@ func SessionsIsNil() predicate.User {
 // SessionsNotNil applies the NotNil predicate on the "sessions" field.
 func SessionsNotNil() predicate.User {
 	return predicate.User(sql.FieldNotNull(FieldSessions))
+}
+
+// HasPosts applies the HasEdge predicate on the "posts" edge.
+func HasPosts() predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, PostsTable, PostsColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasPostsWith applies the HasEdge predicate on the "posts" edge with a given conditions (other predicates).
+func HasPostsWith(preds ...predicate.Post) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.To(PostsInverseTable, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, PostsTable, PostsColumn),
+		)
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
 }
 
 // And groups predicates with the AND operator between them.

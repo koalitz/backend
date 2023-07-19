@@ -5,6 +5,7 @@ package ent
 import (
 	"time"
 
+	"github.com/koalitz/backend/ent/post"
 	"github.com/koalitz/backend/ent/schema"
 	"github.com/koalitz/backend/ent/user"
 )
@@ -13,6 +14,38 @@ import (
 // (default values, validators, hooks and policies) and stitches it
 // to their package variables.
 func init() {
+	postFields := schema.Post{}.Fields()
+	_ = postFields
+	// postDescTitle is the schema descriptor for title field.
+	postDescTitle := postFields[0].Descriptor()
+	// post.TitleValidator is a validator for the "title" field. It is called by the builders before save.
+	post.TitleValidator = postDescTitle.Validators[0].(func(string) error)
+	// postDescImage is the schema descriptor for image field.
+	postDescImage := postFields[1].Descriptor()
+	// post.ImageValidator is a validator for the "image" field. It is called by the builders before save.
+	post.ImageValidator = postDescImage.Validators[0].(func(string) error)
+	// postDescSummary is the schema descriptor for summary field.
+	postDescSummary := postFields[2].Descriptor()
+	// post.SummaryValidator is a validator for the "summary" field. It is called by the builders before save.
+	post.SummaryValidator = func() func(string) error {
+		validators := postDescSummary.Validators
+		fns := [...]func(string) error{
+			validators[0].(func(string) error),
+			validators[1].(func(string) error),
+		}
+		return func(summary string) error {
+			for _, fn := range fns {
+				if err := fn(summary); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
+	// postDescPlace is the schema descriptor for place field.
+	postDescPlace := postFields[3].Descriptor()
+	// post.PlaceValidator is a validator for the "place" field. It is called by the builders before save.
+	post.PlaceValidator = postDescPlace.Validators[0].(func(string) error)
 	userMixin := schema.User{}.Mixin()
 	userMixinFields0 := userMixin[0].Fields()
 	_ = userMixinFields0
@@ -46,6 +79,10 @@ func init() {
 			return nil
 		}
 	}()
+	// userDescRole is the schema descriptor for role field.
+	userDescRole := userFields[1].Descriptor()
+	// user.DefaultRole holds the default value on creation for the role field.
+	user.DefaultRole = userDescRole.Default.(string)
 	// userDescFirstName is the schema descriptor for first_name field.
 	userDescFirstName := userFields[2].Descriptor()
 	// user.FirstNameValidator is a validator for the "first_name" field. It is called by the builders before save.

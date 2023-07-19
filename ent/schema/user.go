@@ -2,6 +2,7 @@ package schema
 
 import (
 	"entgo.io/ent"
+	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
 	"entgo.io/ent/schema/mixin"
 	"github.com/koalitz/backend/pkg/middleware/bind"
@@ -19,21 +20,22 @@ func (User) Fields() []ent.Field {
 		field.String("email").Unique().NotEmpty().Match(bind.EmailRegexp).
 			StructTag(`json:"email,omitempty" validate:"required,email"`),
 
-		field.String("role").StructTag(`json:"role,omitempty" validate:"omitempty,enum=user*organizer*admin"`),
+		field.String("role").Default("member").StructTag(`json:"role,omitempty" validate:"omitempty,enum=member*organizer*admin"`),
 
-		field.String("first_name").Optional().MinLen(3).MaxLen(32).Nillable().
+		field.String("first_name").MinLen(3).MaxLen(32).Nillable().
 			StructTag(`json:"firstName,omitempty" validate:"omitempty,gte=3,lte=32"`),
 
-		field.String("last_name").Optional().MinLen(3).MaxLen(32).Nillable().
+		field.String("last_name").MinLen(3).MaxLen(32).Nillable().
 			StructTag(`json:"lastName,omitempty" validate:"omitempty,gte=3,lte=32"`),
 
 		field.Strings("sessions").Optional().StructTag(`json:"-"`),
 	}
 }
 
-// Edges of the User.
 func (User) Edges() []ent.Edge {
-	return []ent.Edge{}
+	return []ent.Edge{
+		edge.To("posts", Post.Type).StructTag(`json:"-"`),
+	}
 }
 
 func (User) Mixin() []ent.Mixin {
