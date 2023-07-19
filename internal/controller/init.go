@@ -53,7 +53,7 @@ func (h *Handler) InitRoutes(s *Setter) {
 
 	post := rg.Group("/post")
 	{
-		post.POST("", s.erh.HandleError(session.HandleJSONBody(h.createPost, s.sess.SessionFunc, s.valid)))
+		post.POST("", s.erh.HandleError(session.HandleForm(h.createPost, s.sess.SessionFunc, s.valid)))
 		post.GET("/:id", s.erh.HandleError(bind.HandleParam(h.getPostById, s.valid)))
 		post.GET("/:title", s.erh.HandleError(bind.HandleParam(h.getPostByTitle, s.valid)))
 	}
