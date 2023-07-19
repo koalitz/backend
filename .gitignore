@@ -3,3 +3,6 @@
 
 # configs of the server
 .env
+
+# files of the server
+files/
