@@ -9,6 +9,18 @@ import (
 func NewValidator() *validator.Validate {
 	v := validator.New()
 
+	if err := v.RegisterValidation("name", validateName); err != nil {
+		log.WithErr(err).Warn("can't validate name fields")
+	}
+
+	if err := v.RegisterValidation("link", validateLink); err != nil {
+		log.WithErr(err).Warn("can't validate email fields")
+	}
+
+	if err := v.RegisterValidation("title", validateTitle); err != nil {
+		log.WithErr(err).Warn("can't validate email fields")
+	}
+
 	if err := v.RegisterValidation("email", validateEmail); err != nil {
 		log.WithErr(err).Warn("can't validate email fields")
 	}
@@ -39,13 +51,11 @@ func HandleBody[T any](handler func(*gin.Context, T) error, v *validator.Validat
 	}
 }
 
-func HandleBodyWithHeader[T any](handler func(*gin.Context, T) error, v *validator.Validate) func(*gin.Context) error {
+func HandleParam[T any](handler func(*gin.Context, T) error, v *validator.Validate) func(*gin.Context) error {
 	return func(c *gin.Context) error {
 
 		var t T
-		if err := c.ShouldBindJSON(&t); err != nil {
-			return err
-		} else if err = c.ShouldBindHeader(&t); err != nil {
+		if err := c.ShouldBindUri(&t); err != nil {
 			return err
 		} else if err = v.Struct(&t); err != nil {
 			return err
