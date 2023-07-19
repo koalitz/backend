@@ -4,6 +4,7 @@ import (
 	"github.com/ilyakaznacheev/cleanenv"
 	"github.com/joho/godotenv"
 	"github.com/koalitz/backend/pkg/log"
+	"os"
 	"sync"
 	"time"
 )
@@ -50,6 +51,10 @@ type Config struct {
 		Host     string `yaml:"host" env:"EMAIL_STMP_HOST"`
 		Port     int    `yaml:"port" env:"EMAIL_PORT"`
 	} `yaml:"email"`
+
+	Files struct {
+		Path string `yaml:"path" env:"FILES_PATH" env-default:"files/"`
+	} `yaml:"files"`
 }
 
 var (
@@ -76,6 +81,11 @@ func GetConfig() *Config {
 			log.SetLevel(log.DebugLevel)
 		}
 	})
+
+	err := os.Mkdir(inst.Files.Path, os.ModePerm)
+	if err != nil && !os.IsExist(err) {
+		log.WithErr(err).Fatal("can't create directory for files")
+	}
 
 	return inst
 }

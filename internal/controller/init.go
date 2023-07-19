@@ -6,6 +6,7 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/koalitz/backend/internal/controller/dao"
 	"github.com/koalitz/backend/pkg/middleware/bind"
+	"github.com/koalitz/backend/pkg/middleware/session"
 	"net/http"
 )
 
@@ -41,7 +42,7 @@ func (h *Handler) InitRoutes(s *Setter) {
 
 	auth := rg.Group("/auth")
 	{
-		auth.POST("/email", s.erh.HandleError(bind.HandleBodyWithHeader(h.signInByEmail, s.valid)))
+		auth.POST("/email", s.erh.HandleError(bind.HandleBody(h.signInByEmail, s.valid)))
 
 		sess := auth.Group("/session")
 		{
@@ -49,6 +50,17 @@ func (h *Handler) InitRoutes(s *Setter) {
 			sess.DELETE("", s.erh.HandleError(h.signOut))
 		}
 	}
+
+	post := rg.Group("/post")
+	{
+		post.POST("", s.erh.HandleError(session.HandleJSONBody(h.createPost, s.sess.SessionFunc, s.valid)))
+		post.GET("/:id", s.erh.HandleError(bind.HandleParam(h.getPostById, s.valid)))
+		post.GET("/:title", s.erh.HandleError(bind.HandleParam(h.getPostByTitle, s.valid)))
+	}
+
+	post.GET("files/:limit", s.erh.HandleError(bind.HandleParam(h.getImages, s.valid)))
+
+	rg.Static("/file", "./"+h.cfg.Files.Path)
 
 	if h.mail != nil {
 		email := rg.Group("/email")
@@ -60,7 +72,7 @@ func (h *Handler) InitRoutes(s *Setter) {
 
 func initMiddlewares(r *gin.Engine, qh QueryHandler) {
 	config := cors.Config{
-		AllowOrigins:     []string{"https://futureArea.github.io", "http://localhost:3000", "http://localhost:80", "http://localhost"},
+		AllowOrigins:     []string{"https://koalitz.github.io", "http://localhost:3000", "http://localhost:80", "http://localhost"},
 		AllowMethods:     []string{http.MethodGet, http.MethodOptions, http.MethodPatch, http.MethodDelete, http.MethodPost},
 		AllowHeaders:     []string{"Content-Code", "Content-Length", "Cache-Control", "User-Agent", "Accept-Language", "Accept", "DomainName", "Accept-Encoding", "Connection", "Set-Cookie", "Cookie", "Date", "Postman-Token", "Host"},
 		AllowCredentials: true,
