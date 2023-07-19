@@ -22,8 +22,10 @@ tags:
     description: Authenticate queries for user
   - name: Email
     description: Send messages from application smtp email
-  - name: User
-    description: User queries
+  - name: File
+    description: Server files interaction
+  - name: Post
+    description: Posts interaction
 
 paths:
   /auth/session:
@@ -87,6 +89,106 @@ paths:
         '500':
           $ref: '#/components/responses/DatabaseError'
 
+  /file/*filepath:
+    get:
+      tags: [ File ]
+      summary: Get server file
+      description: Open any server file by its name and extension
+      parameters:
+        - $ref: '#/components/parameters/FileName'
+      responses:
+        '200':
+          $ref: '#/components/responses/FileGetSuccess'
+        '404':
+          description: File not found
+
+  /files/:limit:
+    get:
+      tags: [ File ]
+      summary: Get any numbers of server file names
+      description: Shows name and extension for limited number of files
+      parameters:
+        - in: path
+          description: While limit is 0 - all files will be shown
+          name: limit
+          schema:
+            type: integer
+            example: 9
+      responses:
+        '200':
+          $ref: '#/components/responses/FilesGetSuccess'
+        '404':
+          description: File not found
+
+  /post/:id:
+    get:
+      tags: [ Post ]
+      summary: Get post by id
+      description: Returns one post with given id, if exists
+      parameters:
+        - in: path
+          description: ID of the post
+          name: id
+          schema:
+            type: integer
+            example: 5
+      responses:
+        '200':
+          $ref: '#/components/responses/PostGetSuccess'
+        '400':
+          $ref: '#/components/responses/PostNotFound'
+        '500':
+          $ref: '#/components/responses/DatabaseError'
+
+  /post:
+    post:
+      tags: [ Post ]
+      summary: Submit the post
+      description: Upload all info about post and save it
+      requestBody:
+        $ref: "#/components/requestBodies/PostInfo"
+      responses:
+        '200':
+          $ref: "#/components/responses/PostGetSuccess"
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '413':
+          $ref: '#/components/responses/TooLarge'
+        '415':
+          $ref: '#/components/responses/Unsupported'
+        '422':
+          $ref: "#/components/responses/InvalidValidation"
+        '500':
+          $ref: '#/components/responses/DatabaseError'
+
+  /post/:title:
+    get:
+      tags: [ Post ]
+      summary: Get posts by title
+      description: Returns any number of posts which contains given title
+      parameters:
+        - in: path
+          description: String, that any post MUST contain
+          name: title
+          schema:
+            type: string
+            example: ОАО
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/responses/PostGetSuccess'
+        '400':
+          $ref: '#/components/responses/PostNotFound'
+        '500':
+          $ref: '#/components/responses/DatabaseError'
+
 components:
   schemas:
 
@@ -95,12 +197,21 @@ components:
       format: email
       example: example@example.com
 
+    Title:
+      type: string
+      example: ОАО больше
+
     Code:
       writeOnly: true
       type: string
       minLength: 5
       maxLength: 5
       example: QUERY
+
+    Image:
+      type: string
+      format: binary
+      example: binary data
 
     Role:
       enum:
@@ -122,11 +233,25 @@ components:
       minLength: 3
       maxLength: 32
 
+    ImageName:
+      type: string
+      minLength: 20
+      example: qwertyuioppoiuytrewq.png
+      pattern: ^([a-z]+?)(\.[^.]*)$
+
     CreateTime:
       type: string
       readOnly: true
       format: date-time
       example: 2023-06-10T15:06:14.491386+03:00
+
+    Summary:
+      type: string
+      example: Всё обо мне
+
+    Place:
+      type: string
+      example: г. Липецк
 
     Sessions:
       type: array
@@ -140,23 +265,22 @@ components:
           "dcbb2492-6dfa-4b29-9c06-06ba4ad0a686"
         ]
 
-    User:
+    Post:
       type: object
       readOnly: true
       required:
-        - role
-        - firstName
-        - lastName
-        - createTime
+        - title
+        - summary
       properties:
-        role:
-          $ref: "#/components/schemas/Role"
-        firstName:
-          $ref: "#/components/schemas/FirstName"
-        lastName:
-          $ref: "#/components/schemas/LastName"
-        createTime:
-          $ref: "#/components/schemas/CreateTime"
+        title:
+          $ref: '#/components/schemas/Title'
+        summary:
+          $ref: '#/components/schemas/Summary'
+        place:
+          $ref: '#/components/schemas/Place'
+        image:
+          $ref: '#/components/schemas/ImageName'
+
 
     Me:
       type: object
@@ -229,6 +353,35 @@ components:
               email: 
                 $ref: "#/components/schemas/Email"
 
+    PostInfo:
+      required: true
+      content:
+        multipart/form-data:
+          schema:
+            type: object
+            required:
+              - title
+              - summary
+            properties:
+              title:
+                minLength: 3
+                maxLength: 70
+              place:
+                maxLength: 100
+              summary:
+                maxLength: 1024
+              image:
+                $ref: '#/components/schemas/Image'
+
+  parameters:
+
+    FileName:
+      in: path
+      description: File name and his extension
+      name: filepath
+      schema:
+        $ref: '#/components/schemas/ImageName'
+
   responses:
 
     SessionGetSuccess:
@@ -238,6 +391,42 @@ components:
           schema:
             $ref: '#/components/schemas/Me'
 
+    PostGetSuccess:
+      description: Post's info
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Post'
+
+    Forbidden:
+      description: Access denied
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    Unsupported:
+      description: Bad image extension
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    TooLarge:
+      description: File is too large
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+
+    PostNotFound:
+      description: Post not found in db
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
     AuthSuccess:
       description: OK
       content:
@@ -245,6 +434,21 @@ components:
           schema:
             $ref: '#/components/schemas/Me'
 
+    FileGetSuccess:
+      description: File was successfully got
+      content:
+        multipart/form-data:
+          schema:
+            $ref: "#/components/schemas/Image"
+
+    FilesGetSuccess:
+      description: Files was successfully got
+      content:
+        multipart/form-data:
+          schema:
+            type: array
+            items:
+              $ref: "#/components/schemas/ImageName"
       headers:
         Set-Cookie:
           schema:
