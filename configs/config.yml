@@ -1,0 +1,15 @@
+session:
+  refresh_duration_in_seconds: 2592000
+  duration: 720h
+
+listen:
+  port: 3000
+
+db:
+  postgres:
+    port: 5432
+  redis:
+    port: 6379
+
+email:
+  from: "koalitz"
