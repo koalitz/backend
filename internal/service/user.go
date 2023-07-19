@@ -3,12 +3,10 @@ package service
 import (
 	"context"
 	"github.com/koalitz/backend/ent"
-	"github.com/koalitz/backend/internal/controller/dao"
 	"time"
 )
 
 type UserPostgres interface {
-	FindMe(ctx context.Context, sess *dao.Session) (*dao.Me, error)
 	FindUserByID(ctx context.Context, id int) (*ent.User, error)
 }
 
@@ -23,12 +21,6 @@ func NewUserService(postgres UserPostgres, redis UserRedis) *UserService {
 
 func (u *UserService) FindUserByID(id int) (*ent.User, error) {
 	return u.postgres.FindUserByID(context.Background(), id)
-}
-
-// FindMe returns the detail information about user
-func (u *UserService) FindMe(sess *dao.Session) (*dao.Me, error) {
-	user, err := u.postgres.FindMe(context.Background(), sess)
-	return user, err
 }
 
 type UserRedis interface {
