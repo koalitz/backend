@@ -78,7 +78,7 @@ paths:
       requestBody:
         $ref: "#/components/requestBodies/AuthEmailPost"
       responses:
-        '201':
+        '200':
           $ref: "#/components/responses/AuthSuccess"
         '400':
           $ref: "#/components/responses/AuthByEmailFailed"
@@ -240,6 +240,11 @@ components:
 
     AuthSuccess:
       description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Me'
+
       headers:
         Set-Cookie:
           schema:
