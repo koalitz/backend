@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/koalitz/backend/ent"
 	"github.com/koalitz/backend/internal/controller/dao"
+	"github.com/koalitz/backend/internal/controller/dto"
 	"golang.org/x/crypto/bcrypt"
 	"strings"
 )
@@ -13,6 +14,7 @@ type AuthPostgres interface {
 	EmailExist(ctx context.Context, email string) (bool, error)
 	AuthUserByEmail(ctx context.Context, email string) (*ent.User, error)
 	AddSession(ctx context.Context, id int, sessions ...string) error
+	CreateUserByEmail(ctx context.Context, email dto.EmailWithCode) (*ent.User, error)
 }
 
 type AuthService struct {
@@ -41,6 +43,10 @@ func (a *AuthService) AuthUserByEmail(email string) (*ent.User, error) {
 
 func (a *AuthService) AddSession(id int, sessions ...string) error {
 	return a.postgres.AddSession(context.Background(), id, sessions...)
+}
+
+func (a *AuthService) CreateUserByEmail(auth dto.EmailWithCode) (*ent.User, error) {
+	return a.postgres.CreateUserByEmail(context.Background(), auth)
 }
 
 type AuthRedis interface {

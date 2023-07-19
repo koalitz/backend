@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/koalitz/backend/ent"
 	"github.com/koalitz/backend/ent/user"
+	"github.com/koalitz/backend/internal/controller/dto"
 )
 
 // IDExist returns true if username exists. Panics if error occurred
@@ -25,4 +26,8 @@ func (r *UserStorage) AuthUserByEmail(ctx context.Context, email string) (*ent.U
 
 func (r *UserStorage) AddSession(ctx context.Context, id int, sessions ...string) error {
 	return r.userClient.Update().AppendSessions(sessions).Where(user.ID(id)).Exec(ctx)
+}
+
+func (r *UserStorage) CreateUserByEmail(ctx context.Context, auth dto.EmailWithCode) (*ent.User, error) {
+	return r.userClient.Create().SetEmail(auth.Email).SetLastName(auth.LastName).SetFirstName(auth.FirstName).Save(ctx)
 }
