@@ -10,9 +10,11 @@ type StandardError struct {
 }
 
 var (
-	MailCodeError = newStandardError(http.StatusBadRequest, "Code is not correct, used or expired")
-	UnAuthorized  = newStandardError(http.StatusUnauthorized, "You are not logged in")
-	EmailError    = newStandardError(http.StatusInternalServerError, "Can't send message to your email")
+	MailCodeError        = newStandardError(http.StatusBadRequest, "Code is not correct, used or expired")
+	UnAuthorized         = newStandardError(http.StatusUnauthorized, "You are not logged in")
+	EmailError           = newStandardError(http.StatusInternalServerError, "Can't send message to your email")
+	UnsupportedImageType = newStandardError(http.StatusUnsupportedMediaType, "Image should have .png, .jpg or .jpeg extension")
+	ImageTooLarge        = newStandardError(http.StatusRequestEntityTooLarge, "Image must be smaller than 3000 by 3000 pixels")
 )
 
 // Error implements the Error type
