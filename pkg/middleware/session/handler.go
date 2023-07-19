@@ -2,6 +2,7 @@ package session
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/go-playground/validator/v10"
 	"github.com/koalitz/backend/internal/controller/dao"
 	"github.com/koalitz/backend/pkg/middleware/errs"
 	"net/http"
@@ -39,4 +40,24 @@ func (a *Auth) SessionFunc(c *gin.Context) (*dao.Session, error) {
 	}
 
 	return info, nil
+}
+
+func HandleForm[T any](handler func(*gin.Context, T, *dao.Session) error, auth func(*gin.Context) (*dao.Session, error), v *validator.Validate) func(*gin.Context) error {
+	return func(c *gin.Context) error {
+
+		info, err := auth(c)
+		if err != nil {
+			return err
+		}
+
+		var t T
+		if err = c.ShouldBind(&t); err != nil {
+			return err
+		} else if err = v.Struct(&t); err != nil {
+			return err
+		}
+
+		return handler(c, t, info)
+
+	}
 }
