@@ -96,17 +96,20 @@ func getClients(cfg *conf.Config) (*ent.Client, *redis.Client, *email.MailClient
 
 func initHandler(pClient *ent.Client, rClient *redis.Client, mailClient *email.MailClient, cfg *conf.Config) (*controller.Handler, *session.Auth) {
 	pUser := postgres.NewUserStorage(pClient.User)
+	pPost := postgres.NewPostStorage(pClient.Post)
 	rConn := redisRepo.NewRClient(rClient)
 
 	user := service.NewUserService(pUser, rConn)
-	auth := service.NewAuthService(pUser, rConn)
+	post := service.NewPostService(pPost)
 
+	auth := service.NewAuthService(pUser, rConn)
 	sess := session.NewAuth(auth, cfg)
 
 	return controller.NewHandler(
 		user,
 		auth,
 		mailClient,
+		post,
 		sess,
 		cfg,
 	), sess
